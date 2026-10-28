@@ -1,0 +1,48 @@
+{
+  "title": "CPETLite: teacher-student cardiopulmonary exercise reconstruction code",
+  "upload_type": "software",
+  "version": "1.0.0",
+  "description": "Frozen principal and paired-control implementations/configurations for CPETLite, with CPU-only synthetic tests and hash-bound authorized interval-replay code. Clinical records, teacher targets, weights, individual predictions, aggregate clinical source datasets and private paper drafts are excluded. This code supports offline reconstruction research and is not a clinically validated medical device.",
+  "creators": [
+    {
+      "name": "Wang, Cong"
+    },
+    {
+      "name": "Xu, Bei"
+    },
+    {
+      "name": "Su, Hang"
+    },
+    {
+      "name": "Zhuang, Lei"
+    },
+    {
+      "name": "Zhu, Xingguo"
+    },
+    {
+      "name": "Xiao, Zhenglong"
+    },
+    {
+      "name": "Hu, Zhaohui"
+    },
+    {
+      "name": "Liang, Yixiu"
+    },
+    {
+      "name": "Mi, Shouling"
+    }
+  ],
+  "keywords": [
+    "CPET",
+    "teacher-student learning",
+    "exercise physiology",
+    "reproducibility"
+  ],
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/xiaoxubeii/CPETLite",
+      "relation": "isSupplementTo"
+    }
+  ]
+}

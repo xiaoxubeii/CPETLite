@@ -1,0 +1,24 @@
+{
+  "checked_at": "2026-10-21T04:03:50.752294+00:00",
+  "python": "3.12.3 | packaged by Anaconda, Inc. | (main, May 6 2024, 19:46:43) [GCC 11.2.0]",
+  "platform": "Linux-5.15.0-78-generic-x86_64-with-glibc2.35",
+  "packages": {
+    "torch": "2.12.1+cu130",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "h5py": "3.15.1",
+    "scipy": "1.17.1",
+    "scikit-learn": "1.7.2",
+    "joblib": "1.5.2",
+    "threadpoolctl": "3.6.0",
+    "PyYAML": "6.0.3",
+    "pytest": "9.0.2",
+    "pluggy": "1.0.0"
+  },
+  "torch_cuda": "13.0",
+  "gpu": "NVIDIA RTX 6000D",
+  "gpu_driver": "595.71.05",
+  "gpu_memory_mib": 85651,
+  "runtime_policy": "Server Torch/CUDA preserved. Pinned missing non-Torch dependencies installed with --no-deps; existing pluggy not replaced.",
+  "comparison_limit": "Prior local rerun used Torch2.4.1+cu121. Do not attribute every historical/current performance difference to a single repair."
+}

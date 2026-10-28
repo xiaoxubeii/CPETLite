@@ -1,0 +1,7 @@
+{
+  "scope": "Exact source/configuration snapshot is included separately.",
+  "environment_record": "No complete version inventory located in accepted control collection.",
+  "boundary": "Do not substitute the principal training environment or claim clean-environment control retraining.",
+  "accepted_fits": 18,
+  "accepted_evaluations": 36
+}

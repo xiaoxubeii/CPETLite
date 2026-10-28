@@ -1,0 +1,21 @@
+{
+  "scope": "validated reporting/synthetic CPU environment, not original GPU-fitting replay",
+  "python": "3.12.13",
+  "packages": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.5",
+    "torch": "2.4.1+cu121",
+    "h5py": "3.14.0",
+    "PyYAML": "6.0.3",
+    "matplotlib": "3.11.1",
+    "PyMuPDF": "1.26.7",
+    "pytest": "9.0.2",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.0",
+    "joblib": "1.6.0",
+    "threadpoolctl": "3.6.0"
+  },
+  "tex": "pdfTeX 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian)",
+  "platform": "Linux",
+  "training_execution_snapshot": "execution/"
+}

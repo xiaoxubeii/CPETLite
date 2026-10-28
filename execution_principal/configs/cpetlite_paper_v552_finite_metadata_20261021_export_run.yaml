@@ -1,0 +1,189 @@
+source_h5: /root/autodl-tmp/cpetlite_v552_corrected_20261021_r1/data/cpetlite_paper_standard_v5_5_2_20261019/dataset.h5
+split_path: null
+normalization_stats_path: null
+require_frozen_normalization: true
+require_supervision_policy: true
+output_dir: artifacts/models/cpetlite_paper_v552_maskfix150_20261020_direct_measured_seed42
+architecture: wearable_student
+teacher_checkpoint: artifacts/models/cpetlite_paper_v552_finite_metadata_20261021_teacher_seed42/model.pt
+input_boundary: enhanced
+workout_scenario: power_bike_ergometer
+rollout_type: direct
+sde_dt: 1.0
+sde_noise_scale: 0.08
+future_sample_count: 0
+action_future_sample_count: 0
+task_mode: full_reconstruction
+deterministic_derived_channels: true
+joint_gas_exchange_decoder: true
+base_output_feature_columns:
+- VO2
+- VCO2
+- VE
+- HR
+- PetO2
+- PetCO2
+derived_min_vo2: 50.0
+derived_min_vco2: 50.0
+derived_min_hr: 30.0
+rer_denominator_soft_scale: 150.0
+gas_exchange_at_bandwidth: 0.1
+gas_exchange_at_weight: 2.0
+gas_exchange_post_at_weight: 2.0
+core_at_bandwidth: 0.12
+core_at_weight: 1.0
+core_post_at_weight: 0.5
+initial_anchor_steps: 8
+initial_boundary_steps: 8
+peak_timing_beta: 10.0
+online_safe_training: false
+feature_columns:
+- Time
+- Load_Phase
+- Bf
+- VT
+- VE
+- VO2
+- VO2_kg
+- VCO2
+- VCO2_kg
+- RER
+- VE_VO2
+- VE_VCO2
+- METS
+- HR
+- VO2_HR
+- SpO2
+- PetO2
+- PetCO2
+- Power_Load
+- RPM
+target_feature_columns:
+- VO2
+- VO2_kg
+- VCO2
+- VCO2_kg
+- VE
+- RER
+- VE_VO2
+- VE_VCO2
+- METS
+- HR
+- VO2_HR
+- PetO2
+- PetCO2
+reconstruction_metric_feature_columns:
+- VO2
+- VO2_kg
+- VCO2
+- VCO2_kg
+- VE
+- RER
+- VE_VO2
+- VE_VCO2
+- METS
+- VO2_HR
+- PetO2
+- PetCO2
+primary_reconstruction_feature_columns:
+- VO2
+- VCO2
+- VE
+direct_loss_feature_columns:
+- VO2
+- VCO2
+- VE
+- PetO2
+- PetCO2
+slope_loss_feature_columns:
+- VO2
+- VCO2
+- VE
+- PetO2
+- PetCO2
+peak_loss_feature_columns:
+- VO2
+- VCO2
+- VE
+core_derived_feature_columns:
+- RER
+shape_loss_prefix_fraction: 0.6
+loss_weights:
+  latent_alignment: 0.0
+  trajectory_distillation: 0.0
+  endpoint: 1.0
+  uncertainty_distillation: 0.0
+  physiology_consistency: 0.1
+  derived_consistency: 0.0
+  derived_trajectory: 0.5
+  direct_trajectory: 1.2
+  future_window: 0.0
+  peak: 1.5
+  slope: 0.8
+  boundary_trajectory: 1.5
+  morphology: 0.5
+  peak_timing: 0.5
+  core_derived_trajectory: 0.5
+  core_derived_morphology: 0.4
+  core_derived_slope: 0.2
+  core_derived_peak: 0.3
+  core_derived_peak_timing: 0.2
+  gas_exchange_log_ratio: 1.0
+  rer_slope: 0.5
+  gas_exchange_transition: 1.5
+watch_channels:
+- HR
+- HR_smooth
+- HR_slope
+- HR_acceleration
+- HR_rolling_std
+- HR_reserve_pct
+- signal_quality
+- SpO2
+- Bf
+protocol_context_channels:
+- Time
+- Load_Phase
+- Power_Load
+- RPM
+- ramp_slope
+metadata_columns:
+- Age
+- Gender
+- Height_cm
+- Weight_kg
+max_len: 192
+wearable_max_len: 192
+limit_exams: null
+batch_size: 64
+epochs: 150
+learning_rate: 0.0005
+early_stopping:
+  enabled: true
+  monitor: primary_trajectory_rmse
+  mode: min
+  patience: 12
+  min_delta: 0.001
+  restore_best_weights: true
+lr_scheduler:
+  type: reduce_on_plateau
+  monitor: primary_trajectory_rmse
+  mode: min
+  factor: 0.5
+  patience: 4
+  min_lr: 1.0e-06
+d_model: 192
+n_heads: 6
+n_layers: 6
+dropout: 0.1
+wearable_noise_std: 0.02
+wearable_dropout_probability: 0.03
+wearable_lag_steps: 1
+wearable_quantization_step: 0.01
+seed: 42
+experiment_group: cpetlite_matched_seed42
+comparison_role: v4_measured_label_reference
+temporal_backbone_type: transformer
+input_format: v5_derivative_split
+mixed_precision: none
+wearable_simulation_seed: 42

@@ -1,0 +1,14 @@
+# Reporting and CPU synthetic tests; exact Torch build is in environment.json
+numpy==2.5.3
+pandas==3.0.5
+torch==2.4.1
+h5py==3.14.0
+PyYAML==6.0.3
+matplotlib==3.11.1
+PyMuPDF==1.26.7
+pytest==9.0.2
+scikit-learn==1.9.1
+scipy==1.18.0
+joblib==1.6.0
+threadpoolctl==3.6.0
+openpyxl==3.1.5

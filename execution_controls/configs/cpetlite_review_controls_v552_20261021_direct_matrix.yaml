@@ -1,0 +1,31 @@
+schema_version: 1
+matched_inputs: true
+experiment_id: cpetlite_review_controls_v552_20261021_direct
+config_prefix: cpetlite_review_controls_v552_20261021_direct
+seeds:
+- 17
+- 42
+- 73
+stages:
+  full_package:
+    base_config: configs/train_cpetlite_review_controls_v552_20261021_direct_full_package.yaml
+    output_template: artifacts/models/cpetlite_review_controls_v552_20261021_direct_full_package_seed{seed}
+  mean_endpoint:
+    base_config: configs/train_cpetlite_review_controls_v552_20261021_direct_mean_endpoint.yaml
+    output_template: artifacts/models/cpetlite_review_controls_v552_20261021_direct_mean_endpoint_seed{seed}
+  protocol_static:
+    base_config: configs/train_cpetlite_review_controls_v552_20261021_direct_protocol_static.yaml
+    output_template: artifacts/models/cpetlite_review_controls_v552_20261021_direct_protocol_static_seed{seed}
+package: /root/autodl-tmp/cpetlite_review_controls_v552_20261021_r2/assets/distillation.h5
+teacher_checkpoint: /root/autodl-tmp/cpetlite_review_controls_v552_20261021_r2/assets/teacher.pt
+secure_evaluation_config: configs/evaluate_cpetlite_review_controls_v552_20261021_direct.yaml
+evaluation_counts:
+  internal: 1270
+  external: 2385
+evaluation_dir: artifacts/eval/cpetlite_review_controls_v552_20261021_direct
+log_directory: artifacts/logs/cpetlite_review_controls_v552_20261021_direct
+paired_comparisons:
+- - mean_endpoint
+  - full_package
+- - protocol_static
+  - full_package

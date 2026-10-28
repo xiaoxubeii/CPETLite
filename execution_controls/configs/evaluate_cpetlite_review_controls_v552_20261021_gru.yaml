@@ -1,0 +1,6 @@
+source_h5: /root/autodl-tmp/cpetlite_review_controls_v552_20261021_r2/assets/dataset.h5
+input_format: v5_derivative_split
+split_path: null
+normalization_stats_path: null
+require_frozen_normalization: true
+require_supervision_policy: true

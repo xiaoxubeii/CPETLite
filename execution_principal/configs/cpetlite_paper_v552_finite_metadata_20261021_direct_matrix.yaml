@@ -1,0 +1,26 @@
+config_prefix: cpetlite_paper_v552_finite_metadata_20261021_direct
+evaluation_counts:
+  internal: 1270
+  external: 2385
+evaluation_dir: artifacts/eval/cpetlite_paper_v552_finite_metadata_20261021_direct
+experiment_id: cpetlite_paper_v552_finite_metadata_20261021_direct
+log_directory: artifacts/logs/cpetlite_paper_v552_finite_metadata_20261021_direct
+package: artifacts/dataset/cpetlite_paper_v552_finite_metadata_20261021_teacher_package/distillation.h5
+schema_version: 1
+secure_evaluation_config: configs/train_cpetlite_paper_v552_finite_metadata_20261021_direct_measured.yaml
+seeds:
+- 17
+- 42
+- 73
+stages:
+  measured:
+    base_config: configs/train_cpetlite_paper_v552_finite_metadata_20261021_direct_measured.yaml
+    output_template: artifacts/models/cpetlite_paper_v552_finite_metadata_20261021_direct_measured_seed{seed}
+  observable_package:
+    base_config: configs/train_cpetlite_paper_v552_finite_metadata_20261021_direct_observable_package.yaml
+    output_template: artifacts/models/cpetlite_paper_v552_finite_metadata_20261021_direct_observable_package_seed{seed}
+  ordinary_package:
+    base_config: configs/train_cpetlite_paper_v552_finite_metadata_20261021_direct_ordinary_package.yaml
+    output_template: artifacts/models/cpetlite_paper_v552_finite_metadata_20261021_direct_ordinary_package_seed{seed}
+teacher_checkpoint: artifacts/models/cpetlite_paper_v552_finite_metadata_20261021_teacher_seed42/model.pt
+matched_inputs: true

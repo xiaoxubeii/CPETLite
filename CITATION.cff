@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: Please cite this version of the CPETLite software.
+type: software
+title: 'CPETLite: teacher-student cardiopulmonary exercise reconstruction code'
+version: 1.0.0
+date-released: '2026-10-28'
+url: https://github.com/xiaoxubeii/CPETLite
+repository-code: https://github.com/xiaoxubeii/CPETLite
+authors:
+- given-names: Cong
+  family-names: Wang
+- given-names: Bei
+  family-names: Xu
+- given-names: Hang
+  family-names: Su
+- given-names: Lei
+  family-names: Zhuang
+- given-names: Xingguo
+  family-names: Zhu
+- given-names: Zhenglong
+  family-names: Xiao
+- given-names: Zhaohui
+  family-names: Hu
+- given-names: Yixiu
+  family-names: Liang
+- given-names: Shouling
+  family-names: Mi
+keywords:
+- CPET
+- teacher-student learning
+- exercise physiology
+- reproducibility
