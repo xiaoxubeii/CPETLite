@@ -1,4 +1,5 @@
 cff-version: 1.2.0
+doi: 10.5281/zenodo.23734812
 message: Please cite this version of the CPETLite software.
 type: software
 title: 'CPETLite: teacher-student cardiopulmonary exercise reconstruction code'

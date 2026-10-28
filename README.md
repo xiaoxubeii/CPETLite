@@ -1,5 +1,7 @@
 # CPETLite
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23734812.svg)](https://doi.org/10.5281/zenodo.23734812)
+
 Code for offline reconstruction of cardiopulmonary exercise responses using
 teacher-student learning. Public release **v1.0.0**, corresponding to the
 finite-metadata principal experiment and its separate paired-control study.
@@ -76,8 +78,8 @@ release has not been used for new clinical fitting or clean-room GPU retraining.
 
 ## Citation, licence and scope
 
-See CITATION.cff and CODE_AVAILABILITY.md. Zenodo archival status is reported by
-the actual linked record after publication, never by an invented DOI.
+See CITATION.cff and CODE_AVAILABILITY.md. The fixed v1.0.0 archive is published
+at https://doi.org/10.5281/zenodo.23734812. Cite this version DOI for reproducibility.
 Code is released under MIT; see LICENSE. Dependency licences remain separate.
 This research software performs offline reconstruction and is not a validated
 clinical decision tool. Source metadata and code publication do not authorize
