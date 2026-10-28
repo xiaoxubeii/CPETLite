@@ -44,5 +44,6 @@
       "identifier": "https://github.com/xiaoxubeii/CPETLite",
       "relation": "isSupplementTo"
     }
-  ]
+  ],
+  "license": "mit"
 }

@@ -78,7 +78,7 @@ release has not been used for new clinical fitting or clean-room GPU retraining.
 
 See CITATION.cff and CODE_AVAILABILITY.md. Zenodo archival status is reported by
 the actual linked record after publication, never by an invented DOI.
-No open-source reuse licence has been granted; code is provided for inspection.
+Code is released under MIT; see LICENSE. Dependency licences remain separate.
 This research software performs offline reconstruction and is not a validated
 clinical decision tool. Source metadata and code publication do not authorize
 access to hospital records or patient-linked teacher targets/weights.
