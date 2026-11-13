@@ -16,11 +16,11 @@
     ".gitignore": "79d1c3b696abdeaa4246d5d3f45d8be87c8d5e1ab8fb46c1ce3046cebe178456",
     ".zenodo.json": "49f686202e05af665249b347ea5addcfcb998a03cf8043ea2947f597cbeccb39",
     "CHANGELOG.md": "aaf600ea8ff4ab1b6ce15ae4d95816a4b563a146bbe4e5182e1bf32c4e8a2fb1",
-    "CITATION.cff": "e864f476ce5ef755295a454fc3de00b28d30915ebb06a76cbd068bb37fc4bd3a",
-    "CODE_AVAILABILITY.md": "d4e1406e4d965cbcfa80bea3c5da1dc76a8fea92182b4a0f2951751d3763a259",
+    "CITATION.cff": "346cb54794a60cb904346587703c74025abbb5196a25c7e3cb292e79621a91ff",
+    "CODE_AVAILABILITY.md": "da4785ef3518899a14fc8b78083db2749b66b4b2fdfe756081d46e51e6887639",
     "LICENSE": "1a4fb2411496711fdc0c55bc262a47edbbeb02950c2728c4f5ba86247bb7744f",
-    "PROVENANCE.md": "28774e0b658b7450d8d9674237ca6940b7a525493d7c50d4b3799ebc1ae6ad38",
-    "README.md": "90ca404e89ec206a3a8ebb37332087112e49e91f263cd964a125f70f006c5368",
+    "PROVENANCE.md": "eb3f68d0448bcae9aedcda63d56bb29fe4722b136cca8b1acca272fae2444322",
+    "README.md": "c75994d675cde49f8f4ac18f89ee59cc141525a6b26dc8ea7b77d349c93ce528",
     "SMOKE_TEST.md": "aa2c645432bf01f198af9e0eefb7f4901a2eea7eca8866eddc9c80f4638a2971",
     "configs/experiments.yaml": "2b7f59963d3a065d0221ed2202972b3b5f8b5f662caeeea5f65d5f3dd98bff18",
     "environments/controls_training.json": "4c71dc81c6ac2b8b1ff683e708e3efbc625fcc8b8f4528e3350868a1a1893cce",
@@ -174,5 +174,8 @@
     "configs/paths.yaml": "33c5fa719fa3d858b05918ed5aefe89f743917cb2de94b8803dccd2613887d06"
   },
   "source_submission_version": "submission-four-yaml-20261113",
-  "source_submission_code_sha256": "74ecf5e6f0ce72aee557ec1d2f705b35ed74c9e212414c15724b659ffe7f87b9"
+  "source_submission_code_sha256": "74ecf5e6f0ce72aee557ec1d2f705b35ed74c9e212414c15724b659ffe7f87b9",
+  "archival_doi": "10.5281/zenodo.24201819",
+  "source_tag_commit": "88afd0e4183a73135a5f3339976a0a3c871d6b1f",
+  "post_release_changes": "Citation-only main update after the v1.1.0 DOI was verified; tag and release asset unchanged."
 }

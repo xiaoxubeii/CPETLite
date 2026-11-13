@@ -175,5 +175,6 @@ No clinical time-series records, aggregate clinical source tables, examination-l
 predictions, teacher targets or model weights are included. A reader cannot reproduce the complete clinical
 study from this code-only material. Source/check/synthetic equivalence has been
 tested; clean-room GPU retraining and a fresh dependency installation have not.
-The v1.0.0 tag and its Zenodo archive remain unchanged. Cite this version by its
-fixed release URL; the v1.0.0 DOI identifies the earlier release.
+The v1.0.0 tag and its Zenodo archive remain unchanged. Cite v1.1.0 using
+<https://doi.org/10.5281/zenodo.24201819>. Citation-only updates on main do not
+change the fixed v1.1.0 tag or ZIP.

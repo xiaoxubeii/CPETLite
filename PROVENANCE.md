@@ -29,10 +29,11 @@ and their reporting verifier. Those remain in Supplementary Material 2. No
 clinical records, teacher supervision, weights, individual predictions or private
 smoke artifacts have been added to GitHub.
 
-`CITATION.cff` identifies v1.1.0 by its fixed GitHub release URL. The v1.0.0 DOI
-above is an upstream reference, not a DOI assigned to v1.1.0. A Zenodo release
-integration may archive the new version separately; only a verified record
-should be used in manuscript citations.
+The v1.1.0 source tag is commit
+`88afd0e4183a73135a5f3339976a0a3c871d6b1f`, archived at
+<https://doi.org/10.5281/zenodo.24201819>. This DOI was verified after publication
+and added to main in a citation-only follow-up. The fixed tag and its code ZIP
+remain unchanged. The v1.0.0 DOI above identifies the earlier upstream release.
 
 Four bilingual `label_zh` interface strings remain in each original
 `wearable_twin.py` snapshot to preserve source bytes. User documentation and
