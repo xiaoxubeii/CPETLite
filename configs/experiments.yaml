@@ -1,0 +1,2109 @@
+schema_version: 2
+shared_parameters:
+  training:
+    split_path: null
+    normalization_stats_path: null
+    require_frozen_normalization: true
+    require_supervision_policy: true
+    output_dir: ${run.output_dir}
+    feature_columns:
+    - Time
+    - Load_Phase
+    - Bf
+    - VT
+    - VE
+    - VO2
+    - VO2_kg
+    - VCO2
+    - VCO2_kg
+    - RER
+    - VE_VO2
+    - VE_VCO2
+    - METS
+    - HR
+    - VO2_HR
+    - SpO2
+    - PetO2
+    - PetCO2
+    - Power_Load
+    - RPM
+    max_len: 192
+    limit_exams: null
+    batch_size: 64
+    learning_rate: 0.0005
+    d_model: 192
+    n_heads: 6
+    n_layers: 6
+    dropout: 0.1
+    seed: 42
+  control_evaluation:
+    source_h5: ${controls.source_h5}
+    input_format: v5_derivative_split
+    split_path: null
+    normalization_stats_path: null
+    require_frozen_normalization: true
+    require_supervision_policy: true
+parameter_sets:
+  teacher.train:
+    base: training
+    overrides:
+      source_h5: ${principal.source_h5}
+      manifest_path: ${principal.manifest}
+      architecture: protocol_direct_transformer
+      protocol_feature_columns:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      metadata_columns:
+      - Age
+      - Height_cm
+      - Weight_kg
+      epochs: 30
+      sde_dt: 0.05
+      sde_noise_scale: 0.01
+      teacher_input_mode: full
+      input_format: v5_derivative_split
+      evaluation_split_name: val
+  teacher.export:
+    base: training
+    overrides:
+      source_h5: ${principal.source_h5}
+      architecture: wearable_student
+      teacher_checkpoint: ${principal.teacher_checkpoint}
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.0
+        trajectory_distillation: 0.0
+        endpoint: 1.0
+        uncertainty_distillation: 0.0
+        physiology_consistency: 0.1
+        derived_consistency: 0.0
+        derived_trajectory: 0.5
+        direct_trajectory: 1.2
+        future_window: 0.0
+        peak: 1.5
+        slope: 0.8
+        boundary_trajectory: 1.5
+        morphology: 0.5
+        peak_timing: 0.5
+        core_derived_trajectory: 0.5
+        core_derived_morphology: 0.4
+        core_derived_slope: 0.2
+        core_derived_peak: 0.3
+        core_derived_peak_timing: 0.2
+        gas_exchange_log_ratio: 1.0
+        rer_slope: 0.5
+        gas_exchange_transition: 1.5
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: primary_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: primary_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      temporal_backbone_type: transformer
+      input_format: v5_derivative_split
+      mixed_precision: none
+      wearable_simulation_seed: 42
+  principal.transformer.measured:
+    base: training
+    overrides:
+      source_h5: ${principal.source_h5}
+      architecture: wearable_student
+      teacher_checkpoint: null
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.0
+        trajectory_distillation: 0.0
+        endpoint: 1.0
+        uncertainty_distillation: 0.0
+        physiology_consistency: 0.1
+        derived_consistency: 0.0
+        derived_trajectory: 0.5
+        direct_trajectory: 1.2
+        future_window: 0.0
+        peak: 1.5
+        slope: 0.8
+        boundary_trajectory: 1.5
+        morphology: 0.5
+        peak_timing: 0.5
+        core_derived_trajectory: 0.5
+        core_derived_morphology: 0.4
+        core_derived_slope: 0.2
+        core_derived_peak: 0.3
+        core_derived_peak_timing: 0.2
+        gas_exchange_log_ratio: 1.0
+        rer_slope: 0.5
+        gas_exchange_transition: 1.5
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: primary_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: primary_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      temporal_backbone_type: transformer
+      input_format: v5_derivative_split
+      mixed_precision: none
+      wearable_simulation_seed: 42
+      matched_input_package: ${principal.supervision}
+  principal.transformer.teacher:
+    base: training
+    overrides:
+      source_h5: null
+      architecture: wearable_student
+      teacher_checkpoint: null
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.75
+        trajectory_distillation: 0.75
+        endpoint: 1.0
+        uncertainty_distillation: 0.2
+        physiology_consistency: 0.1
+        derived_consistency: 0.0
+        derived_trajectory: 0.0
+        direct_trajectory: 0.0
+        future_window: 0.0
+        peak: 0.0
+        slope: 0.0
+        boundary_trajectory: 0.0
+        morphology: 0.0
+        peak_timing: 0.0
+        core_derived_trajectory: 0.0
+        core_derived_morphology: 0.0
+        core_derived_slope: 0.0
+        core_derived_peak: 0.0
+        core_derived_peak_timing: 0.0
+        gas_exchange_log_ratio: 0.0
+        rer_slope: 0.0
+        gas_exchange_transition: 0.0
+        observability_weighted_distillation: 0.0
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      distillation_package_path: ${principal.supervision}
+      supervision_mode: teacher_only
+      temporal_backbone_type: transformer
+      gradient_clip_norm: 1.0
+      mixed_precision: none
+      wearable_simulation_seed: 42
+      require_matched_input_contract: true
+  auxiliary.transformer.observable:
+    base: training
+    overrides:
+      source_h5: null
+      architecture: wearable_student
+      teacher_checkpoint: null
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.75
+        trajectory_distillation: 0.75
+        endpoint: 1.0
+        uncertainty_distillation: 0.2
+        physiology_consistency: 0.1
+        derived_consistency: 0.0
+        derived_trajectory: 0.0
+        direct_trajectory: 0.0
+        future_window: 0.0
+        peak: 0.0
+        slope: 0.0
+        boundary_trajectory: 0.0
+        morphology: 0.0
+        peak_timing: 0.0
+        core_derived_trajectory: 0.0
+        core_derived_morphology: 0.0
+        core_derived_slope: 0.0
+        core_derived_peak: 0.0
+        core_derived_peak_timing: 0.0
+        gas_exchange_log_ratio: 0.0
+        rer_slope: 0.0
+        gas_exchange_transition: 0.0
+        observability_weighted_distillation: 1.0
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      distillation_package_path: ${principal.supervision}
+      supervision_mode: teacher_only
+      temporal_backbone_type: transformer
+      gradient_clip_norm: 1.0
+      mixed_precision: none
+      wearable_simulation_seed: 42
+      require_matched_input_contract: true
+  principal.gru.measured:
+    base: training
+    overrides:
+      source_h5: ${principal.source_h5}
+      architecture: wearable_student
+      teacher_checkpoint: null
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.0
+        trajectory_distillation: 0.0
+        endpoint: 1.0
+        uncertainty_distillation: 0.0
+        physiology_consistency: 0.1
+        derived_consistency: 0.0
+        derived_trajectory: 0.5
+        direct_trajectory: 1.2
+        future_window: 0.0
+        peak: 1.5
+        slope: 0.8
+        boundary_trajectory: 1.5
+        morphology: 0.5
+        peak_timing: 0.5
+        core_derived_trajectory: 0.5
+        core_derived_morphology: 0.4
+        core_derived_slope: 0.2
+        core_derived_peak: 0.3
+        core_derived_peak_timing: 0.2
+        gas_exchange_log_ratio: 1.0
+        rer_slope: 0.5
+        gas_exchange_transition: 1.5
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: primary_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: primary_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      temporal_backbone_type: gru
+      input_format: v5_derivative_split
+      mixed_precision: none
+      wearable_simulation_seed: 42
+      matched_input_package: ${principal.supervision}
+  principal.gru.teacher:
+    base: training
+    overrides:
+      source_h5: null
+      architecture: wearable_student
+      teacher_checkpoint: null
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.75
+        trajectory_distillation: 0.75
+        endpoint: 1.0
+        uncertainty_distillation: 0.2
+        physiology_consistency: 0.1
+        derived_consistency: 0.0
+        derived_trajectory: 0.0
+        direct_trajectory: 0.0
+        future_window: 0.0
+        peak: 0.0
+        slope: 0.0
+        boundary_trajectory: 0.0
+        morphology: 0.0
+        peak_timing: 0.0
+        core_derived_trajectory: 0.0
+        core_derived_morphology: 0.0
+        core_derived_slope: 0.0
+        core_derived_peak: 0.0
+        core_derived_peak_timing: 0.0
+        gas_exchange_log_ratio: 0.0
+        rer_slope: 0.0
+        gas_exchange_transition: 0.0
+        observability_weighted_distillation: 0.0
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      distillation_package_path: ${principal.supervision}
+      supervision_mode: teacher_only
+      temporal_backbone_type: gru
+      gradient_clip_norm: 1.0
+      mixed_precision: none
+      wearable_simulation_seed: 42
+      require_matched_input_contract: true
+  controls.transformer.full_package:
+    base: training
+    overrides:
+      source_h5: null
+      architecture: wearable_student
+      teacher_checkpoint: null
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.75
+        trajectory_distillation: 0.75
+        endpoint: 1.0
+        uncertainty_distillation: 0.2
+        physiology_consistency: 0.1
+        derived_consistency: 0.0
+        derived_trajectory: 0.0
+        direct_trajectory: 0.0
+        future_window: 0.0
+        peak: 0.0
+        slope: 0.0
+        boundary_trajectory: 0.0
+        morphology: 0.0
+        peak_timing: 0.0
+        core_derived_trajectory: 0.0
+        core_derived_morphology: 0.0
+        core_derived_slope: 0.0
+        core_derived_peak: 0.0
+        core_derived_peak_timing: 0.0
+        gas_exchange_log_ratio: 0.0
+        rer_slope: 0.0
+        gas_exchange_transition: 0.0
+        observability_weighted_distillation: 0.0
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      distillation_package_path: ${controls.supervision}
+      supervision_mode: teacher_only
+      temporal_backbone_type: transformer
+      gradient_clip_norm: 1.0
+      mixed_precision: none
+      wearable_simulation_seed: 42
+      require_matched_input_contract: true
+      input_ablation: none
+      trajectory_distillation_mode: gaussian_nll
+  controls.transformer.mean_endpoint:
+    base: training
+    overrides:
+      source_h5: null
+      architecture: wearable_student
+      teacher_checkpoint: null
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.0
+        trajectory_distillation: 0.75
+        endpoint: 1.0
+        uncertainty_distillation: 0.0
+        physiology_consistency: 0.0
+        derived_consistency: 0.0
+        derived_trajectory: 0.0
+        direct_trajectory: 0.0
+        future_window: 0.0
+        peak: 0.0
+        slope: 0.0
+        boundary_trajectory: 0.0
+        morphology: 0.0
+        peak_timing: 0.0
+        core_derived_trajectory: 0.0
+        core_derived_morphology: 0.0
+        core_derived_slope: 0.0
+        core_derived_peak: 0.0
+        core_derived_peak_timing: 0.0
+        gas_exchange_log_ratio: 0.0
+        rer_slope: 0.0
+        gas_exchange_transition: 0.0
+        observability_weighted_distillation: 0.0
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      distillation_package_path: ${controls.supervision}
+      supervision_mode: teacher_only
+      temporal_backbone_type: transformer
+      gradient_clip_norm: 1.0
+      mixed_precision: none
+      wearable_simulation_seed: 42
+      require_matched_input_contract: true
+      input_ablation: none
+      trajectory_distillation_mode: mean_mse
+  controls.transformer.protocol_static:
+    base: training
+    overrides:
+      source_h5: null
+      architecture: wearable_student
+      teacher_checkpoint: null
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.75
+        trajectory_distillation: 0.75
+        endpoint: 1.0
+        uncertainty_distillation: 0.2
+        physiology_consistency: 0.1
+        derived_consistency: 0.0
+        derived_trajectory: 0.0
+        direct_trajectory: 0.0
+        future_window: 0.0
+        peak: 0.0
+        slope: 0.0
+        boundary_trajectory: 0.0
+        morphology: 0.0
+        peak_timing: 0.0
+        core_derived_trajectory: 0.0
+        core_derived_morphology: 0.0
+        core_derived_slope: 0.0
+        core_derived_peak: 0.0
+        core_derived_peak_timing: 0.0
+        gas_exchange_log_ratio: 0.0
+        rer_slope: 0.0
+        gas_exchange_transition: 0.0
+        observability_weighted_distillation: 0.0
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      distillation_package_path: ${controls.supervision}
+      supervision_mode: teacher_only
+      temporal_backbone_type: transformer
+      gradient_clip_norm: 1.0
+      mixed_precision: none
+      wearable_simulation_seed: 42
+      require_matched_input_contract: true
+      input_ablation: protocol_static
+      trajectory_distillation_mode: gaussian_nll
+  controls.gru.full_package:
+    base: training
+    overrides:
+      source_h5: null
+      architecture: wearable_student
+      teacher_checkpoint: null
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.75
+        trajectory_distillation: 0.75
+        endpoint: 1.0
+        uncertainty_distillation: 0.2
+        physiology_consistency: 0.1
+        derived_consistency: 0.0
+        derived_trajectory: 0.0
+        direct_trajectory: 0.0
+        future_window: 0.0
+        peak: 0.0
+        slope: 0.0
+        boundary_trajectory: 0.0
+        morphology: 0.0
+        peak_timing: 0.0
+        core_derived_trajectory: 0.0
+        core_derived_morphology: 0.0
+        core_derived_slope: 0.0
+        core_derived_peak: 0.0
+        core_derived_peak_timing: 0.0
+        gas_exchange_log_ratio: 0.0
+        rer_slope: 0.0
+        gas_exchange_transition: 0.0
+        observability_weighted_distillation: 0.0
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      distillation_package_path: ${controls.supervision}
+      supervision_mode: teacher_only
+      temporal_backbone_type: gru
+      gradient_clip_norm: 1.0
+      mixed_precision: none
+      wearable_simulation_seed: 42
+      require_matched_input_contract: true
+      input_ablation: none
+      trajectory_distillation_mode: gaussian_nll
+  controls.gru.mean_endpoint:
+    base: training
+    overrides:
+      source_h5: null
+      architecture: wearable_student
+      teacher_checkpoint: null
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.0
+        trajectory_distillation: 0.75
+        endpoint: 1.0
+        uncertainty_distillation: 0.0
+        physiology_consistency: 0.0
+        derived_consistency: 0.0
+        derived_trajectory: 0.0
+        direct_trajectory: 0.0
+        future_window: 0.0
+        peak: 0.0
+        slope: 0.0
+        boundary_trajectory: 0.0
+        morphology: 0.0
+        peak_timing: 0.0
+        core_derived_trajectory: 0.0
+        core_derived_morphology: 0.0
+        core_derived_slope: 0.0
+        core_derived_peak: 0.0
+        core_derived_peak_timing: 0.0
+        gas_exchange_log_ratio: 0.0
+        rer_slope: 0.0
+        gas_exchange_transition: 0.0
+        observability_weighted_distillation: 0.0
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      distillation_package_path: ${controls.supervision}
+      supervision_mode: teacher_only
+      temporal_backbone_type: gru
+      gradient_clip_norm: 1.0
+      mixed_precision: none
+      wearable_simulation_seed: 42
+      require_matched_input_contract: true
+      input_ablation: none
+      trajectory_distillation_mode: mean_mse
+  controls.gru.protocol_static:
+    base: training
+    overrides:
+      source_h5: null
+      architecture: wearable_student
+      teacher_checkpoint: null
+      input_boundary: enhanced
+      workout_scenario: power_bike_ergometer
+      rollout_type: direct
+      sde_dt: 1.0
+      sde_noise_scale: 0.08
+      future_sample_count: 0
+      action_future_sample_count: 0
+      task_mode: full_reconstruction
+      deterministic_derived_channels: true
+      joint_gas_exchange_decoder: true
+      base_output_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - HR
+      - PetO2
+      - PetCO2
+      derived_min_vo2: 50.0
+      derived_min_vco2: 50.0
+      derived_min_hr: 30.0
+      rer_denominator_soft_scale: 150.0
+      gas_exchange_at_bandwidth: 0.1
+      gas_exchange_at_weight: 2.0
+      gas_exchange_post_at_weight: 2.0
+      core_at_bandwidth: 0.12
+      core_at_weight: 1.0
+      core_post_at_weight: 0.5
+      initial_anchor_steps: 8
+      initial_boundary_steps: 8
+      peak_timing_beta: 10.0
+      online_safe_training: false
+      target_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - HR
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      reconstruction_metric_feature_columns:
+      - VO2
+      - VO2_kg
+      - VCO2
+      - VCO2_kg
+      - VE
+      - RER
+      - VE_VO2
+      - VE_VCO2
+      - METS
+      - VO2_HR
+      - PetO2
+      - PetCO2
+      primary_reconstruction_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      direct_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      slope_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      - PetO2
+      - PetCO2
+      peak_loss_feature_columns:
+      - VO2
+      - VCO2
+      - VE
+      core_derived_feature_columns:
+      - RER
+      shape_loss_prefix_fraction: 0.6
+      loss_weights:
+        latent_alignment: 0.75
+        trajectory_distillation: 0.75
+        endpoint: 1.0
+        uncertainty_distillation: 0.2
+        physiology_consistency: 0.1
+        derived_consistency: 0.0
+        derived_trajectory: 0.0
+        direct_trajectory: 0.0
+        future_window: 0.0
+        peak: 0.0
+        slope: 0.0
+        boundary_trajectory: 0.0
+        morphology: 0.0
+        peak_timing: 0.0
+        core_derived_trajectory: 0.0
+        core_derived_morphology: 0.0
+        core_derived_slope: 0.0
+        core_derived_peak: 0.0
+        core_derived_peak_timing: 0.0
+        gas_exchange_log_ratio: 0.0
+        rer_slope: 0.0
+        gas_exchange_transition: 0.0
+        observability_weighted_distillation: 0.0
+      watch_channels:
+      - HR
+      - HR_smooth
+      - HR_slope
+      - HR_acceleration
+      - HR_rolling_std
+      - HR_reserve_pct
+      - signal_quality
+      - SpO2
+      - Bf
+      protocol_context_channels:
+      - Time
+      - Load_Phase
+      - Power_Load
+      - RPM
+      - ramp_slope
+      metadata_columns:
+      - Age
+      - Gender
+      - Height_cm
+      - Weight_kg
+      wearable_max_len: 192
+      epochs: 150
+      early_stopping:
+        enabled: true
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        patience: 12
+        min_delta: 0.001
+        restore_best_weights: true
+      lr_scheduler:
+        type: reduce_on_plateau
+        monitor: teacher_core_trajectory_rmse
+        mode: min
+        factor: 0.5
+        patience: 4
+        min_lr: 1.0e-06
+      wearable_noise_std: 0.02
+      wearable_dropout_probability: 0.03
+      wearable_lag_steps: 1
+      wearable_quantization_step: 0.01
+      distillation_package_path: ${controls.supervision}
+      supervision_mode: teacher_only
+      temporal_backbone_type: gru
+      gradient_clip_norm: 1.0
+      mixed_precision: none
+      wearable_simulation_seed: 42
+      require_matched_input_contract: true
+      input_ablation: protocol_static
+      trajectory_distillation_mode: gaussian_nll
+  controls.transformer.evaluation:
+    base: control_evaluation
+    overrides: {}
+  controls.gru.evaluation:
+    base: control_evaluation
+    overrides: {}
+experiments:
+  teacher.train:
+    snapshot: execution_principal
+    parameters: teacher.train
+    kind: train
+    path_group: principal
+    seeds:
+    - 42
+  teacher.export:
+    snapshot: execution_principal
+    parameters: teacher.export
+    kind: export
+    path_group: principal
+    seeds:
+    - 42
+  principal.transformer.measured:
+    snapshot: execution_principal
+    parameters: principal.transformer.measured
+    kind: train
+    path_group: principal
+    seeds:
+    - 17
+    - 42
+    - 73
+    evaluation_parameters: principal.transformer.measured
+  principal.transformer.teacher:
+    snapshot: execution_principal
+    parameters: principal.transformer.teacher
+    kind: train
+    path_group: principal
+    seeds:
+    - 17
+    - 42
+    - 73
+    evaluation_parameters: principal.transformer.measured
+  auxiliary.transformer.observable:
+    snapshot: execution_principal
+    parameters: auxiliary.transformer.observable
+    kind: train
+    path_group: principal
+    seeds:
+    - 17
+    - 42
+    - 73
+    evaluation_parameters: principal.transformer.measured
+    note: Additional archived diagnostic variant, separate from principal comparisons.
+  principal.gru.measured:
+    snapshot: execution_principal
+    parameters: principal.gru.measured
+    kind: train
+    path_group: principal
+    seeds:
+    - 17
+    - 42
+    - 73
+    evaluation_parameters: principal.gru.measured
+  principal.gru.teacher:
+    snapshot: execution_principal
+    parameters: principal.gru.teacher
+    kind: train
+    path_group: principal
+    seeds:
+    - 17
+    - 42
+    - 73
+    evaluation_parameters: principal.gru.measured
+  controls.transformer.full_package:
+    snapshot: execution_controls
+    parameters: controls.transformer.full_package
+    kind: train
+    path_group: controls
+    seeds:
+    - 17
+    - 42
+    - 73
+    evaluation_parameters: controls.transformer.evaluation
+  controls.transformer.mean_endpoint:
+    snapshot: execution_controls
+    parameters: controls.transformer.mean_endpoint
+    kind: train
+    path_group: controls
+    seeds:
+    - 17
+    - 42
+    - 73
+    evaluation_parameters: controls.transformer.evaluation
+  controls.transformer.protocol_static:
+    snapshot: execution_controls
+    parameters: controls.transformer.protocol_static
+    kind: train
+    path_group: controls
+    seeds:
+    - 17
+    - 42
+    - 73
+    evaluation_parameters: controls.transformer.evaluation
+  controls.gru.full_package:
+    snapshot: execution_controls
+    parameters: controls.gru.full_package
+    kind: train
+    path_group: controls
+    seeds:
+    - 17
+    - 42
+    - 73
+    evaluation_parameters: controls.gru.evaluation
+  controls.gru.mean_endpoint:
+    snapshot: execution_controls
+    parameters: controls.gru.mean_endpoint
+    kind: train
+    path_group: controls
+    seeds:
+    - 17
+    - 42
+    - 73
+    evaluation_parameters: controls.gru.evaluation
+  controls.gru.protocol_static:
+    snapshot: execution_controls
+    parameters: controls.gru.protocol_static
+    kind: train
+    path_group: controls
+    seeds:
+    - 17
+    - 42
+    - 73
+    evaluation_parameters: controls.gru.evaluation

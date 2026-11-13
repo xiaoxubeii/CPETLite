@@ -1,0 +1,112 @@
+# Generated compatibility config; do not edit.
+# standard_inventory_sha256: 2e03e333da445c488422709e5cf84d5e18451f4e38d3d2da58f9da143f04635d
+metadata:
+  names:
+  - Gender
+  - Age
+  - Height_cm
+  - Weight_kg
+  - Examination_ID
+  - Source_Device
+  - Institute_Name
+  - Raw_Phase0_End_Time
+  - Raw_Phase1_Start_Time
+  - Raw_Phase1_End_Time
+  - Raw_Phase2_Start_Time
+features:
+  names:
+  - Time
+  - Load_Phase
+  - Bf
+  - BR_pct
+  - VT
+  - VE
+  - Ti
+  - Te
+  - Ttot
+  - Ti_Ttot_Ratio
+  - VD_VT_Ratio
+  - VT_Ti
+  - VO2
+  - VO2_kg
+  - VCO2
+  - VCO2_kg
+  - RER
+  - VE_VO2
+  - VE_VCO2
+  - METS
+  - HR
+  - VO2_HR
+  - SpO2
+  - BP_Syst
+  - BP_Diast
+  - HRR
+  - CO
+  - PaO2
+  - PaCO2
+  - PetO2
+  - PetCO2
+  - Power_Load
+  - RPM
+  - EE_kcal_h
+  - Fat_kcal_h
+  - CHO_kcal_h
+  - ST_I
+  - ST_II
+  - ST_III
+  - ST_aVR
+  - ST_aVL
+  - ST_aVF
+  - ST_V1
+  - ST_V2
+  - ST_V3
+  - ST_V4
+  - ST_V5
+  - ST_V6
+  - S_I
+  - S_II
+  - S_III
+  - S_aVR
+  - S_aVL
+  - S_aVF
+  - S_V1
+  - S_V2
+  - S_V3
+  - S_V4
+  - S_V5
+  - S_V6
+  aggregation:
+    interval: 10
+    default: mean
+    zero_as_missing:
+    - Bf
+    - VT
+    - VE
+    - Ti
+    - Te
+    - Ttot
+    - VT_Ti
+    - VO2
+    - VO2_kg
+    - VCO2
+    - VCO2_kg
+    - RER
+    - HR
+    - VO2_HR
+    - SpO2
+    - BP_Syst
+    - BP_Diast
+    - CO
+    - PaO2
+    - PaCO2
+    - PetO2
+    - PetCO2
+    methods:
+      Time: right_endpoint
+      Load_Phase: phase_at_endpoint
+      Power_Load: last_in_phase
+annotations:
+  names:
+  - Time_at_AT
+  - Peak_VO2
+  - Peak_VO2_kg

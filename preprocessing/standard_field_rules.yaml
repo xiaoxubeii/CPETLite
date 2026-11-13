@@ -1,0 +1,58 @@
+# Shared advisory review rules, NOT clinical reference ranges or exclusions.
+# Values are preserved. null means that no bound is defined.
+# Time/phase ordering and examination-level selection are separate contracts.
+version: 1
+default:
+  lower: null
+  upper: null
+  lower_inclusive: true
+  upper_inclusive: true
+fields:
+  Bf: {lower: 0, upper: 150, lower_inclusive: false}
+  VT: {lower: 0, upper: 10, lower_inclusive: false}
+  VE: {lower: 0, upper: 300, lower_inclusive: false}
+  VE_kg: {lower: 0, lower_inclusive: false}
+  Ti: {lower: 0, upper: 30, lower_inclusive: false}
+  Te: {lower: 0, upper: 30, lower_inclusive: false}
+  Ttot: {lower: 0, upper: 60, lower_inclusive: false}
+  VT_Ti: {lower: 0, upper: 20, lower_inclusive: false}
+  VO2: {lower: 0, upper: 10000, lower_inclusive: false}
+  VO2_kg: {lower: 0, upper: 120, lower_inclusive: false}
+  VCO2: {lower: 0, upper: 12000, lower_inclusive: false}
+  VCO2_kg: {lower: 0, upper: 150, lower_inclusive: false}
+  # <20 beats/min is a broad review prompt, NOT a clinical normal limit.
+  HR: {lower: 20, upper: 250}
+  VO2_HR: {lower: 0, upper: 60, lower_inclusive: false}
+  RER: {lower: 0, upper: 3, lower_inclusive: false}
+  BP_Syst: {lower: 0, upper: 350, lower_inclusive: false}
+  BP_Diast: {lower: 0, upper: 250, lower_inclusive: false}
+  CO: {lower: 0, upper: 50, lower_inclusive: false}
+  Stroke_Volume: {lower: 0, lower_inclusive: false}
+  PaO2: {lower: 0, upper: 760, lower_inclusive: false}
+  PaCO2: {lower: 0, upper: 200, lower_inclusive: false}
+  PetO2: {lower: 0, upper: 760, lower_inclusive: false}
+  PetCO2: {lower: 0, upper: 200, lower_inclusive: false}
+  SpO2: {lower: 0, upper: 100, lower_inclusive: false}
+  VD_VT_Ratio: {lower: 0, upper: 1}
+  # Positive Ti and Te imply 0 < Ti/(Ti+Te) < 1. VD/VT keeps valid endpoints.
+  Ti_Ttot_Ratio: {lower: 0, upper: 1, lower_inclusive: false, upper_inclusive: false}
+  VE_VO2: {lower: 0, upper: 300, lower_inclusive: false}
+  VE_VCO2: {lower: 0, upper: 300, lower_inclusive: false}
+  METS: {lower: 0, upper: 40, lower_inclusive: false}
+  Power_Load: {lower: 0, upper: 1000}
+  RPM: {lower: 0, upper: 250}
+  EE_kcal_h: {lower: 0, upper: 5000}
+  Fat_kcal_h: {lower: 0, upper: 5000}
+  CHO_kcal_h: {lower: 0, upper: 5000}
+  # Metadata/calibration fields use the same table in the field audit; they
+  # are not automatically added to the time-series quality_flag matrix.
+  Age: {lower: 0, upper: 120}
+  Height_cm: {lower: 50, upper: 250}
+  # Adult-resource review prompt; preserve low weights pending verification.
+  Weight_kg: {lower: 20, upper: 400}
+  Pressure_Barometric_mmHg: {lower: 200, upper: 900}
+  Temp_Ambient_C: {lower: -20, upper: 60}
+  RH_Ambient_pct: {lower: 0, upper: 100}
+  # Examination summary; assume schema mL/min, without certifying conversion.
+  # Values below 10 are advisory review flags, not proven scale errors.
+  OUES: {lower: 10, upper: null}

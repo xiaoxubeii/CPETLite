@@ -1,0 +1,10 @@
+output_root: ../../cpetlite_runs
+principal:
+  source_h5: null
+  supervision: null
+  teacher_checkpoint: null
+  manifest: null
+controls:
+  source_h5: null
+  supervision: null
+  teacher_checkpoint: null

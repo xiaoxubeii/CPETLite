@@ -1,86 +1,179 @@
-# CPETLite
+# CPETLite v1.1.0
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23734812.svg)](https://doi.org/10.5281/zenodo.23734812)
+CPETLite provides a teacher–student framework for reconstructing CPET curves
+and estimating endpoints from limited physiological signals. This release adds
+portable configuration and a unified command interface to the archived v1.0.0
+principal/control implementations. Scientific model and loss code is unchanged.
+See [PROVENANCE.md](PROVENANCE.md), [CHANGELOG.md](CHANGELOG.md) and
+[CODE_AVAILABILITY.md](CODE_AVAILABILITY.md).
 
-Code for offline reconstruction of cardiopulmonary exercise responses using
-teacher-student learning. Public release **v1.0.0**, corresponding to the
-finite-metadata principal experiment and its separate paired-control study.
+## What you can run without clinical data
 
-## Quick check (no clinical data)
+Use an existing compatible Python environment; the upstream review dependencies
+are in `requirements-review.txt`. A clean environment can be prepared separately
+with `python -m pip install -r requirements-review.txt`. This dependency file is
+for reporting/synthetic CPU checks, not a guarantee of GPU training equivalence.
+Historical observed environments are retained in `environments/`.
 
-Use Python3.12.13 and the pinned reporting environment in requirements-review.txt.
-For an existing compatible environment:
+From this directory:
 
 ```sh
 python scripts/cpetlite_release.py check
 python scripts/cpetlite_release.py check --synthetic
+python -m pytest -q tests/test_experiment_cli.py
+python scripts/run_experiment.py list
 ```
 
-The first command checks file hashes with only the Python standard library.
-The second uses PyTorch on CPU and runs a loss/gradient/access-contract smoke
-check and four zero/missingness/padding/endpoint tests separately against each
-frozen snapshot. These commands do not download data, use a GPU or train models.
-To install dependencies in a new environment, run
-`python -m pip install -r requirements-review.txt`; installation can require network
-access. The observed synthetic/reporting Torch build is recorded in environments/.
+These verify source integrity, synthetic implementation behaviour and the portable interface. They do not reproduce clinical performance,
+retrain models or reconstruct examination-level intervals from summary CSVs.
 
-## Implementations
+## 1. Set your local paths once
 
-- execution_principal/:74 exact accepted Python/YAML files, including the teacher,
-  Transformer/GRU students, export, fitting, evaluation and principal configurations.
-- execution_controls/:78 exact Python/YAML files from the separately accepted
-  control experiment. Keep the snapshots separate; do not mix their runtime claims.
-- scripts/:integrity checks, shared-examination bootstrap and authorized interval replay.
-- tests/:patient-free examples against real frozen simulator/loss interfaces.
-- environments/:observed principal training/reporting environments and the explicit
-  gap in the control runtime version inventory. No clean-room retraining is claimed.
+Edit `configs/paths.yaml`. Its distributed input values are null: no original
+server directories or clinical files are embedded. Fill only the paths needed
+for your selected operation. Every relative path is interpreted relative to
+this YAML file, regardless of your shell's working directory.
+This is the designated user-editable file: its distributed default hash is
+recorded separately, and editing it does not invalidate the source integrity
+check. The central scientific configuration and code remain covered by that check.
 
-The frozen snapshots retain historical nonsecret input/output paths. Edit local
-working copies of configurations before use; do not assume those paths exist.
+| Group/key | Purpose |
+| --- | --- |
+| `principal.source_h5` | Approved clinical HDF5 for teacher/direct-measured training and principal scoring |
+| `principal.manifest` | Approved registry manifest used by the teacher configuration |
+| `principal.supervision` | Frozen teacher export for principal student supervision and the original matched-input measured baseline |
+| `principal.teacher_checkpoint` | Teacher weights for export and principal scoring |
+| `controls.source_h5` | Approved control-study HDF5 for scoring |
+| `controls.supervision` | Frozen control-study teacher export |
+| `controls.teacher_checkpoint` | Teacher weights for control-study scoring |
+| `output_root` | Directory for generated configurations, models, logs and evaluation outputs |
 
-## Authorized clinical replay
+Use the fixed split/scaling information embedded in the approved derivative and
+teacher export. Original null split/scaler fields remain null; do not generate
+new splits or refit scalers on validation/test data. Principal and control-study
+files must correspond to their respective original experiment lineage.
 
-No clinical or aggregate source data are supplied. Approved users must obtain the
-two accepted result archives and their authorized reference-summary directory:
-principal_results.json and control_results.json. Their exact hashes are recorded
-in RELEASE_MANIFEST.json, without publishing their contents.
+## 2. Choose an experiment and seeds
+
+The distributed source contains exactly four YAML files:
+
+```text
+configs/paths.yaml
+configs/experiments.yaml
+preprocessing/standard_columns.yaml
+preprocessing/standard_field_rules.yaml
+```
+
+`configs/experiments.yaml` contains the catalogue, shared scientific parameters,
+and explicit differences for each experiment. There are no separate template
+files. A parameter set selects one shared base and supplies complete top-level
+overrides; nested dictionaries such as loss weights are replaced as whole values,
+not implicitly merged. The resolved settings are verified against the original
+experiments. Users normally edit only `configs/paths.yaml`. Supported student seeds
+are 17, 42 and 73. Teacher training and export use 42. Seed-expanded copies are generated
+only when requested, outside the distributed source by default. These generated
+run records are not additional files in the distributed four-YAML configuration.
+
+- Principal comparison: `principal.transformer.teacher`,
+  `principal.transformer.measured`, `principal.gru.teacher`,
+  `principal.gru.measured`.
+- Controls: `controls.transformer.full_package`,
+  `controls.transformer.mean_endpoint`, `controls.transformer.protocol_static`,
+  and the corresponding `controls.gru.*` identifiers.
+- Provider steps: `teacher.train`, `teacher.export`.
+- Additional archived diagnostic setting: `auxiliary.transformer.observable`;
+  this is separate from the principal comparison and control-study baselines.
+
+Prepare a configuration and inspect its command plan without starting training:
 
 ```sh
-python scripts/cpetlite_release.py replay-intervals \
-  --principal-results /approved/principal/RESULTS.tar.gz \
-  --control-results /approved/controls/RESULTS.tar.gz \
-  --reference-dir /approved/reference-summaries \
-  --output /new/directory/outside-this-repository
+python scripts/run_experiment.py prepare \
+  --experiment principal.transformer.teacher --seeds 17 42 73 \
+  --paths configs/paths.yaml
 ```
 
-All inputs must match the accepted hashes before arrays are read or outputs are
-created. The replay recomputes36 fixed-prediction intervals using2000 shared
-examination draws (RNG42 internal/142 external), retaining fitted seeds17/42/73.
-It excludes smoke outputs by complete experiment name and performs no training.
-It does not establish patient independence, clinical label validity or uncertainty
-from teacher retraining/centre sampling. Reference summaries can be supplied from
-the approved author-review reproduction attachment; they are not included here.
+The JSON plan reports resolved configuration paths and any input-path settings
+still missing. `prepare` can run without clinical files. It preserves null raw
+data/checkpoint fields in teacher-supervised students, and separates their
+finite-signal inputs from teacher-generated supervision.
 
-## Authorized training
+The auxiliary `auxiliary.transformer.observable` experiment additionally requires
+an enriched teacher-supervision HDF5 containing `teacher_observability_weight`.
+The ordinary `teacher.export` output does not supply this field. Use an approved
+enriched export with the matching record/split/scaler lineage, supplied through
+`principal.supervision` in a separate local paths file. Do not fabricate weights
+or treat the ordinary export as sufficient for this auxiliary diagnostic.
 
-Training requires separately approved Standard5.5.2 records, frozen scalers and
-split definitions; package-student fitting requires the frozen teacher export.
-From the applicable execution snapshot, the common training CLI is:
+## 3. Train or export only when authorised inputs are available
+
+To run the same selected experiment, explicit execution is required:
 
 ```sh
-PYTHONPATH=src python -m cpet_foundation.cli train --config /path/to/approved/local.yaml
+python scripts/run_experiment.py run \
+  --experiment principal.transformer.teacher --seeds 17 42 73 \
+  --paths configs/paths.yaml --execute
 ```
 
-Inspect the included teacher and per-seed student YAMLs and resolve input/package/
-output paths first. The provider-side export interface is
-`scripts/export_teacher_only_package.py --help` inside each snapshot. This public
-release has not been used for new clinical fitting or clean-room GPU retraining.
+The adapter invokes the existing snapshot's training CLI; it does not implement
+another trainer. Seeds run sequentially. Logs are saved beside resolved configs.
+Missing inputs stop execution before training. Existing model/output directories
+are never overwritten; select a new `output_root` for a fresh run.
 
-## Citation, licence and scope
+The provider can select `teacher.train` and then `teacher.export` through the
+same interface. After teacher training, set `principal.teacher_checkpoint` to
+its `model.pt`. Export writes `distillation.h5` under the export run's output
+directory; set `principal.supervision` to that file before training students.
+Approved existing exports/weights can be supplied instead. Control-study exports
+must retain that study's original lineage; they are not automatically regenerated
+or substituted by the principal export.
 
-See CITATION.cff and CODE_AVAILABILITY.md. The fixed v1.0.0 archive is published
-at https://doi.org/10.5281/zenodo.23734812. Cite this version DOI for reproducibility.
-Code is released under MIT; see LICENSE. Dependency licences remain separate.
-This research software performs offline reconstruction and is not a validated
-clinical decision tool. Source metadata and code publication do not authorize
-access to hospital records or patient-linked teacher targets/weights.
+## 4. Evaluate frozen students separately
+
+```sh
+python scripts/run_experiment.py evaluate \
+  --experiment principal.gru.teacher --seeds 17 \
+  --paths configs/paths.yaml --split test
+```
+
+This is also a dry-run unless `--execute` is added. By default it expects
+`model.pt` in the selected run's model directory. For one seed, an independently
+supplied model can be selected with `--checkpoint /your/path/model.pt`.
+Evaluation requires approved raw HDF5 and teacher weights. The original principal
+evaluation settings, including their fixed scoring seed 42, are retained independently
+of the selected student's training seed. Control evaluation uses its original
+minimal secure-data configuration. `test` selects the external split;
+`validation` selects internal validation. Choose checkpoints on internal validation
+only; external results must not select configurations or checkpoints.
+Internal and external evaluation use separate output/configuration/log paths.
+
+The principal measured-supervision baseline also uses the original export's
+matched-input information through `matched_input_package`. Its targets remain
+measured values; this input-alignment dependency is retained rather than silently
+removed. Supply both `principal.source_h5` and `principal.supervision` for it.
+
+To replay the original fixed-prediction intervals, use
+`python scripts/cpetlite_release.py replay-intervals --help` and supply the
+separately approved archives/reference summaries matching the required hashes.
+This retains the upstream numerical replay contract; no clinical replay was
+performed when reorganising this archive.
+
+## Verification and aggregate reporting
+
+The same scientific code and central configuration were exercised in a bounded
+real-data smoke test covering all 13 catalogue entries. See
+[SMOKE_TEST.md](SMOKE_TEST.md) for the protocol, input requirements and limits.
+No clinical data or smoke checkpoints are included in this public release.
+
+Aggregate CSVs, the source workbook and `reporting/verify_summary.py` remain in
+the paper's Supplementary Material 2 rather than this public code-only tree.
+Use that material for aggregate arithmetic checks. The interval-replay command
+above still requires separately authorised, hash-matched inputs.
+
+## Scope
+
+No clinical time-series records, aggregate clinical source tables, examination-level
+predictions, teacher targets or model weights are included. A reader cannot reproduce the complete clinical
+study from this code-only material. Source/check/synthetic equivalence has been
+tested; clean-room GPU retraining and a fresh dependency installation have not.
+The v1.0.0 tag and its Zenodo archive remain unchanged. Cite this version by its
+fixed release URL; the v1.0.0 DOI identifies the earlier release.

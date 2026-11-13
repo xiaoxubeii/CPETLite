@@ -43,7 +43,6 @@ METRICS = [('primary_trajectory_rmse', 4), ('at_time_s_mae', 2), ('vo2peak_mae',
 COUNTS = {'train': 11404, 'val': 1270, 'test': 2385}
 CENTRES = {'rizhao': 'Rizhao', 'zhongshan': 'Zhongshan', 'qinghua_changgeng': 'Qinghua Changgeng',
            'shanghai_feike': 'Shanghai Feike', 'xuhui': 'Xuhui', 'liuyuan': 'Liuyuan'}
-sys.path.insert(0, str(Path('/home/ubuntu/.agents/skills/nature-figure/scripts')))
 # The standalone review bundle ships the exact same auditor beside this file.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from audit_panel_alignment import require_matplotlib_panel_alignment

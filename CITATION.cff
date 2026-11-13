@@ -1,11 +1,10 @@
 cff-version: 1.2.0
-doi: 10.5281/zenodo.23734812
 message: Please cite this version of the CPETLite software.
 type: software
 title: 'CPETLite: teacher-student cardiopulmonary exercise reconstruction code'
-version: 1.0.0
-date-released: '2026-10-28'
-url: https://github.com/xiaoxubeii/CPETLite
+version: 1.1.0
+date-released: '2026-11-13'
+url: https://github.com/xiaoxubeii/CPETLite/releases/tag/v1.1.0
 repository-code: https://github.com/xiaoxubeii/CPETLite
 authors:
 - given-names: Cong

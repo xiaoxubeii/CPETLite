@@ -22,9 +22,8 @@ METRICS = [x[0] for x in principal.METRICS]
 
 
 def frozen_metric_functions():
-    capsule = ROOT / 'supplementary/v552_package/reproducibility/cpetlite-v552-code-config.zip'
-    with ZipFile(capsule) as z:
-        source = z.read('scripts/summarize_distillation_component_ablation.py')
+    metric_source = ROOT / 'execution_principal/scripts/summarize_distillation_component_ablation.py'
+    source = metric_source.read_bytes()
     parsed = ast.parse(source)
     functions = [node for node in parsed.body if isinstance(node, ast.FunctionDef)
                  and node.name in ('_case_components', '_component_metrics')]

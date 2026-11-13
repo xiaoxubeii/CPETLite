@@ -1,8 +1,8 @@
 {
   "title": "CPETLite: teacher-student cardiopulmonary exercise reconstruction code",
   "upload_type": "software",
-  "version": "1.0.0",
-  "description": "Frozen principal and paired-control implementations/configurations for CPETLite, with CPU-only synthetic tests and hash-bound authorized interval-replay code. Clinical records, teacher targets, weights, individual predictions, aggregate clinical source datasets and private paper drafts are excluded. This code supports offline reconstruction research and is not a clinically validated medical device.",
+  "version": "1.1.0",
+  "description": "Portable four-YAML configuration and unified execution interface for the frozen CPETLite principal/control implementations, with CLI/synthetic tests and a bounded real-data smoke summary. Scientific model/loss code is unchanged from v1.0.0. Clinical records, supervision, weights, individual predictions, aggregate clinical datasets and private manuscripts are excluded. This is offline reconstruction research, not a validated medical device.",
   "creators": [
     {
       "name": "Wang, Cong"
